@@ -1,0 +1,143 @@
+---
+title: "DrugSentiment"
+author: "Amardeep Singh"
+date: "August 16, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library("tm")
+library("SnowballC")
+library("wordcloud")
+library("RColorBrewer")
+```
+```{r}
+st<-read.csv("C://Users//Amardeep//Downloads//train_F3WbcTw.csv",header=TRUE)
+```
+```{r}
+stnt<-st$sentiment
+new_data<-cbind(SA,stnt)
+```
+```{r}
+new_data$stnt <- as.numeric(as.character(new_data$stnt))
+
+```
+```{r}
+model1<-lm(new_data$stnt~new_data$WordCount+new_data$SentimentGI+new_data$SentimentHE+new_data$SentimentHE+new_data$SentimentQDAP+new_data$SentimentLM)
+summary(model1)$coefficients
+```
+
+```{r}
+my_data<-as.matrix(st)
+```
+```{r}
+sntmt<-my_data[1:5351,3:3]
+rw<-my_data[1:5351,1:1]
+drg<-my_data[1:5351,2:2]
+```
+```{r}
+library(SentimentAnalysis)
+SentimentAnalysis::analyzeSentiment(rw[1])
+```
+```{r}
+docs <- Corpus(VectorSource(rw[1:5351]))
+```
+```{r}
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+docs <- tm_map(docs, toSpace, "/")
+docs <- tm_map(docs, toSpace, "@")
+docs <- tm_map(docs, toSpace, "\\|")
+```
+```{r}
+# Convert the text to lower case
+docs <- tm_map(docs, content_transformer(tolower))
+# Remove numbers
+docs <- tm_map(docs, removeNumbers)
+# Remove english common stopwords
+docs <- tm_map(docs, removeWords, stopwords("english"))
+# Remove your own stop word
+# specify your stopwords as a character vector
+docs <- tm_map(docs, removeWords, c("blabla1", "blabla2")) 
+# Remove punctuations
+docs <- tm_map(docs, removePunctuation)
+# Eliminate extra white spaces
+docs <- tm_map(docs, stripWhitespace)
+# Text stemming
+# docs <- tm_map(docs, stemDocument)
+```
+```{r}
+SA<-SentimentAnalysis::analyzeSentiment(docs)
+```
+```{r}
+mod1<-lm(sntmt~SA$WordCount+SA$SentimentGI)
+```
+```{r}
+
+```
+```{r}
+
+```
+```{r}
+dtm <- TermDocumentMatrix(docs[1:5351])
+m <- as.matrix(dtm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+head(d, 10)
+```
+## TESTING DATASET PROCESSING
+```{r}
+stest<-read.csv("C://Users//Amardeep//Downloads//test_tOlRoBf.csv",header=TRUE)
+my_data_test<-as.matrix(stest)
+```
+```{r}
+rw_test<-my_data_test[1:2924,2:2]
+docs_test <- Corpus(VectorSource(rw_test[1:2924]))
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+docs_test <- tm_map(docs_test, toSpace, "/")
+docs_test <- tm_map(docs_test, toSpace, "@")
+docs_test <- tm_map(docs_test, toSpace, "\\|")
+# Convert the text to lower case
+docs_test <- tm_map(docs_test, content_transformer(tolower))
+# Remove numbers
+docs_test <- tm_map(docs_test, removeNumbers)
+# Remove english common stopwords
+docs_test <- tm_map(docs_test, removeWords, stopwords("english"))
+# Remove your own stop word
+# specify your stopwords as a character vector
+docs_test <- tm_map(docs_test, removeWords, c("blabla1", "blabla2")) 
+# Remove punctuations
+docs_test <- tm_map(docs_test, removePunctuation)
+# Eliminate extra white spaces
+docs_test <- tm_map(docs_test, stripWhitespace)
+# Text stemming
+# docs <- tm_map(docs, stemDocument)
+SA_test<-SentimentAnalysis::analyzeSentiment(docs_test)
+
+```
+```{r}
+SA_test %>% 
+  mutate(sentiment = round((1.6197705631+(0.0001052394*SA_test$WordCount)+(0.0001065944*SA_test$SentimentGI)+(-0.1936682347*SA_test$SentimentHE)+(-0.6320083928*SA_test$SentimentQDAP)+(-0.4750289421*SA_test$SentimentLM)),digits = 1))
+
+```
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
